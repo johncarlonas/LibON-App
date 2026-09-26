@@ -1013,7 +1013,7 @@ function ContactRow({ c, emphasis, nav }: { c: Contact; emphasis?: boolean; nav?
       <div>
         <strong>{c.name}</strong>
         <small>{c.sub}</small>
-        <span className="contact-meta">Mon–Fri 8:00 AM – 5:00 PM · Municipal Hall</span>
+        <span className="contact-meta">Mon–Fri 8:00 AM – 5:00 PM ·<br />Municipal Hall</span>
       </div>
       <a className="call-btn" href={`tel:${c.number.replace(/[^0-9]/g, '')}`}><Icon name="phone" size={15} /> Call</a>
     </div>
