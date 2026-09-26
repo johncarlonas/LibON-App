@@ -1188,10 +1188,13 @@ export default function App() {
 
   return (
     <div className="app-frame">
-      <div className="app">
-        <StatusBar />
-        <div className="viewport">{screen}</div>
-        {showNav && <BottomNav activeTab={activeTab} nav={nav} />}
+      <div className="device-shell">
+        <span className="device-island" aria-hidden="true"><i /></span>
+        <div className="app">
+          <StatusBar />
+          <div className="viewport">{screen}</div>
+          {showNav && <BottomNav activeTab={activeTab} nav={nav} />}
+        </div>
       </div>
     </div>
   )

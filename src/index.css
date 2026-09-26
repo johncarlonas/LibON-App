@@ -57,6 +57,8 @@ a { text-decoration: none; color: inherit; }
   background: radial-gradient(circle at 70% -5%, #4a6a4c 0, transparent 45%), #223a29;
   padding: 0;
 }
+.device-shell { width: 100%; }
+.device-island { display: none; }
 .app {
   position: relative;
   width: 100%;
@@ -70,8 +72,43 @@ a { text-decoration: none; color: inherit; }
   padding-top: env(safe-area-inset-top);
 }
 @media (min-width: 480px) {
-  .app-frame { padding: 24px; }
-  .app { border-radius: 34px; box-shadow: 0 30px 70px rgba(10,25,15,.55); }
+  .app-frame { padding: 28px; }
+  .device-shell {
+    position: relative;
+    width: fit-content;
+    padding: 8px;
+    border: 2px solid #b5a6bd;
+    border-radius: 58px;
+    background: linear-gradient(115deg, #f3eaf3, #6d6175 12%, #171519 25%, #222025 76%, #988aa0 94%, #eee5ed);
+    box-shadow: 0 0 0 2px #29232d, 0 0 0 4px #716578, 0 28px 65px rgba(0, 0, 0, .4);
+  }
+  .device-shell::before,
+  .device-shell::after { content: ''; position: absolute; width: 3px; background: #86768f; border-radius: 2px; }
+  .device-shell::before { left: -6px; top: 21%; height: 36px; box-shadow: 0 76px #86768f, 0 118px #86768f; }
+  .device-shell::after { right: -6px; top: 33%; height: 78px; }
+  .device-island {
+    position: absolute;
+    z-index: 20;
+    display: block;
+    top: 23px;
+    left: 50%;
+    width: 116px;
+    height: 33px;
+    transform: translateX(-50%);
+    border-radius: 20px;
+    background: #050507;
+    box-shadow: inset 0 1px 2px #232329, 0 1px 2px rgba(0, 0, 0, .25);
+    pointer-events: none;
+  }
+  .device-island i { position: absolute; right: 11px; top: 12px; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 60% 40%, #203a80, #080c1e 65%); }
+  .app {
+    width: min(390px, calc(100vw - 64px));
+    max-width: none;
+    height: min(844px, calc(100dvh - 80px));
+    max-height: none;
+    border-radius: 48px;
+    padding-top: 0;
+  }
 }
 .viewport { flex: 1; position: relative; overflow: hidden; display: flex; }
 .scroll { flex: 1; overflow-y: auto; width: 100%; -webkit-overflow-scrolling: touch; }
