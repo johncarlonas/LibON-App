@@ -8,6 +8,8 @@ import {
   BuildingOffice2Icon,
   BriefcaseIcon,
   TicketIcon,
+  MapPinIcon,
+  BellIcon,
 } from '@heroicons/react/24/solid'
 
 /* ------------------------------------------------------------------ */
@@ -239,10 +241,10 @@ function Home({ nav, reports }: { nav: Nav; reports: Report[] }) {
     <div className="scroll no-scrollbar">
       <div className="home-head">
         <div className="util-row">
-          <div className="place-row"><Icon name="pin" size={15} /> Burabod, Libon, Albay</div>
+          <div className="place-row"><MapPinIcon className="place-pin" aria-hidden="true" /> Burabod, Libon, Albay</div>
           <div className="util-actions">
             <button className="bell-btn" onClick={() => nav.go('notifications')} aria-label="Notifications">
-              <Icon name="bell" size={21} /><b />
+              <BellIcon className="bell-icon" aria-hidden="true" /><b />
             </button>
           </div>
         </div>
@@ -1091,9 +1093,8 @@ function BottomNav({ activeTab, nav }: { activeTab: string; nav: Nav }) {
         <Icon name="grid" size={23} filled={activeTab === 'Services'} /><span>Services</span>
       </button>
 
-      <button className={`nav-bonly ${activeTab === 'Bonly' ? 'active' : ''}`} onClick={() => nav.go('chat')}>
+      <button className={`nav-bonly ${activeTab === 'Bonly' ? 'active' : ''}`} onClick={() => nav.go('chat')} aria-label="Talk to Bonly">
         <img src="/src/assets/bonly-icon.png" alt="Bonly" className={`bonly-nav-img ${activeTab === 'Bonly' ? 'on' : ''}`} />
-        <span>Ask Bonly</span>
       </button>
 
       <button className={`nav-item ${activeTab === 'Report' ? 'active' : ''}`} onClick={() => nav.go('report')}>
@@ -1112,7 +1113,10 @@ function StatusBar() {
       <time dateTime="09:41">9:41</time>
       <div className="status-icons" aria-hidden="true">
         <span className="bars"><i /><i /><i /><i /></span>
-        <span>5G</span>
+        <svg className="wifi" viewBox="0 0 18 14" fill="none" aria-hidden="true">
+          <path d="M1.5 4.5a11.5 11.5 0 0 1 15 0M4.5 7.5a7 7 0 0 1 9 0M7.5 10.5a2.5 2.5 0 0 1 3 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <circle cx="9" cy="12.5" r="1" fill="currentColor" />
+        </svg>
         <span className="battery" />
       </div>
     </div>
@@ -1189,11 +1193,16 @@ export default function App() {
   return (
     <div className="app-frame">
       <div className="device-shell">
+        <span className="device-button device-action" aria-hidden="true" />
+        <span className="device-button device-volume-up" aria-hidden="true" />
+        <span className="device-button device-volume-down" aria-hidden="true" />
+        <span className="device-button device-power" aria-hidden="true" />
         <span className="device-island" aria-hidden="true"><i /></span>
         <div className="app">
           <StatusBar />
           <div className="viewport">{screen}</div>
           {showNav && <BottomNav activeTab={activeTab} nav={nav} />}
+          <div className="home-indicator" aria-hidden="true"><span /></div>
         </div>
       </div>
     </div>
