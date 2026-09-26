@@ -72,14 +72,14 @@ a { text-decoration: none; color: inherit; }
   padding-top: env(safe-area-inset-top);
 }
 @media (min-width: 480px) {
-  .app-frame { padding: 28px; }
+  .app-frame { height: 100dvh; min-height: 0; padding: 0; overflow: hidden; }
   .device-shell {
     position: relative;
     width: fit-content;
     padding: 8px;
     border: 2px solid #b5a6bd;
     border-radius: 58px;
-    background: linear-gradient(115deg, #f3eaf3, #6d6175 12%, #171519 25%, #222025 76%, #988aa0 94%, #eee5ed);
+    background: linear-gradient(#655b6b, #09090b 5%, #09090b 95%, #19161c);
     box-shadow: 0 0 0 2px #29232d, 0 0 0 4px #716578, 0 28px 65px rgba(0, 0, 0, .4);
   }
   .device-shell::before,
@@ -104,7 +104,7 @@ a { text-decoration: none; color: inherit; }
   .app {
     width: min(390px, calc(100vw - 64px));
     max-width: none;
-    height: min(844px, calc(100dvh - 80px));
+    height: min(844px, calc(100dvh - 20px));
     max-height: none;
     border-radius: 48px;
     padding-top: 0;
