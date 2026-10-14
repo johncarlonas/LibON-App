@@ -1,4 +1,6 @@
-import { useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import AdminDashboard from './AdminDashboard'
+import { OFFICES as ADMIN_OFFICES, STATUSES, addActivity, formatDate, nextTicketId, updateDemoStore, useDemoStore, type ContentItem, type Ticket } from './demoStore'
 import {
   Squares2X2Icon,
   FlagIcon,
@@ -18,7 +20,7 @@ import {
 type IconName =
   | 'home' | 'grid' | 'chat' | 'flag' | 'more' | 'search' | 'bell' | 'arrow' | 'back'
   | 'pin' | 'camera' | 'mic' | 'check' | 'phone' | 'ticket' | 'file' | 'heart' | 'leaf'
-  | 'megaphone' | 'clock' | 'send' | 'plus' | 'x' | 'edit' | 'globe' | 'shield' | 'users'
+  | 'megaphone' | 'clock' | 'calendar' | 'send' | 'plus' | 'x' | 'edit' | 'globe' | 'shield' | 'users'
   | 'book' | 'graduation' | 'store' | 'sparkle' | 'chevron' | 'map' | 'star' | 'cross'
   | 'tractor' | 'briefcase' | 'accessibility' | 'info' | 'trash' | 'water' | 'road' | 'bulb'
 
@@ -58,6 +60,7 @@ function Icon({ name, size = 20, stroke = 1.9, filled = false }: { name: IconNam
     leaf: <><path d="M20 3C9 3 4 8 4 16c0 3 2 5 5 5 8 0 11-10 11-18Z" /><path d="M4 21c2-5 6-9 12-12" /></>,
     megaphone: <><path d="m4 13 13-5v10L4 13zM17 10l3-2v10l-3-2M6 14l1 5h3l-1-4" /></>,
     clock: <><circle cx="12" cy="12" r="8" /><path d="M12 7v5l3 2" /></>,
+    calendar: <><rect x="3" y="4.5" width="18" height="16" rx="2" /><path d="M7 3v3M17 3v3M3 9h18" /></>,
     send: <><path d="m21 3-7 18-3-8-8-3z" /><path d="m11 13 4-4" /></>,
     plus: <path d="M12 5v14M5 12h14" />,
     x: <path d="M6 6l12 12M18 6 6 18" />,
@@ -111,7 +114,7 @@ function Bonly({ size = 46 }: { size?: number }) {
 /* ------------------------------------------------------------------ */
 /* Demo data                                                           */
 /* ------------------------------------------------------------------ */
-type Service = { id: string; title: string; office: string; desc: string; cat: string; icon: IconName; online?: boolean; reqs: string[]; steps: string[]; hours: string; contact: string; location: string; processing: string }
+type Service = { id: string; title: string; office: string; desc: string; cat: string; icon: IconName; online?: boolean; officialLink?: string; reqs: string[]; steps: string[]; hours: string; contact: string; location: string; processing: string }
 const CATEGORIES = ['All', 'Civil Registry', 'Business', 'Health', 'Social Services', 'Agriculture', 'Youth & Education', 'Tourism & Culture', 'Others']
 
 const SERVICES: Service[] = [
@@ -123,7 +126,7 @@ const SERVICES: Service[] = [
   { id: 'senior', title: 'Senior Citizen & PWD ID', office: 'Municipal Social Welfare Office', desc: 'Register for benefits, discounts and assistance programs.', cat: 'Social Services', icon: 'users', hours: 'Mon–Fri, 8:00 AM – 5:00 PM', contact: '(052) 487-1188', location: 'MSWDO, Municipal Hall', processing: '1–2 working days', reqs: ['Birth certificate or proof of age', '1x1 ID photo', 'Proof of Libon residency'], steps: ['Fill out the OSCA / PWD form', 'Submit requirements at MSWDO', 'Claim your ID and booklet'] },
 ]
 
-type Update = { id: string; label: string; type: string; title: string; date: string; preview: string; body: string; office: string; photo?: string; photoAlt?: string }
+type Update = { id: string; label: string; type: string; title: string; date: string; preview: string; body: string; office: string; photo?: string; photoUrl?: string; photoAlt?: string }
 const UPDATE_FILTERS = ['All', 'Advisories', 'Programs', 'Opportunities', 'Events', 'Emergency']
 const UPDATES: Update[] = [
   { id: 'u1', label: 'Emergency', type: 'Emergency', title: 'Heavy rainfall advisory issued', date: 'Sep 25, 2026', preview: 'PAGASA warns of moderate to heavy rain over Albay this afternoon.', office: 'MDRRMO Libon', photo: '1515694346937-94d85e41e6f0', photoAlt: 'Heavy rain over green hills', body: 'Residents in low-lying and flood-prone barangays are advised to monitor water levels and prepare emergency kits. Coordinate with your barangay for pre-emptive evacuation if advised.' },
@@ -133,7 +136,7 @@ const UPDATES: Update[] = [
   { id: 'u5', label: 'Events', type: 'Events', title: 'Paroy Festival activities announced', date: 'Sep 18, 2026', preview: 'A week-long celebration of Libon culture, harvest and community.', office: 'Municipal Tourism Office', photo: '1536153635972-1fc2e818f642', photoAlt: 'Harvest rice grains display', body: 'Join the annual Paroy Festival featuring street dancing, an agri-trade fair and cultural showcases across the town plaza. See the full schedule of activities at the Tourism Office.' },
 ]
 
-type Place = { id: string; name: string; cat: string; brgy: string; icon: IconName; photo: string; alt: string; desc: string; hours: string; contact: string }
+type Place = { id: string; name: string; cat: string; brgy: string; icon: IconName; photo: string; photoUrl?: string; alt: string; desc: string; hours: string; contact: string }
 const EXPLORE_FILTERS = ['All', 'Destinations', 'Food', 'Local Businesses', 'Accommodations', 'Local Products']
 // Photos are illustrative, category-representative stock imagery (not identifying a
 // specific establishment). Build sized, cropped, lazy-loaded URLs from the base id.
@@ -146,7 +149,7 @@ const PLACES: Place[] = [
   { id: 'p5', name: 'Riverside Homestay', cat: 'Accommodations', brgy: 'Brgy. Bariw', icon: 'home', photo: '1758298134892-363f0aa7dc91', alt: 'Boats docked on a calm river with mountains behind', desc: 'A family-run homestay near the river, offering simple rooms and home-cooked meals.', hours: 'Check-in from 2:00 PM', contact: '0920 555 0199' },
 ]
 
-type Contact = { id: string; name: string; sub: string; icon: IconName; number: string }
+type Contact = { id: string; name: string; sub: string; icon: IconName; number: string; hours?: string; location?: string }
 const EMERGENCY: Contact[] = [
   { id: 'e1', name: 'MDRRMO', sub: 'Disaster Risk Reduction', icon: 'shield', number: '(052) 487-2911' },
   { id: 'e2', name: 'Ambulance / Health', sub: 'Rural Health Unit', icon: 'cross', number: '(052) 487-1155' },
@@ -167,15 +170,47 @@ const REPORT_CATS: { key: string; icon: IconName }[] = [
 ]
 
 type Report = { id: string; category: string; icon: IconName; desc: string; location: string; date: string; status: string; resolved: boolean; timeline: { title: string; sub: string; office?: string; time: string; done: boolean; active?: boolean }[] }
-const seedReport: Report = {
-  id: 'LIB-2026-0132', category: 'Waste / Sanitation', icon: 'trash', desc: 'Uncollected garbage piling up near the market entrance.', location: 'Poblacion, near Public Market', date: 'Sep 19, 2026', status: 'Resolved', resolved: true,
-  timeline: [
-    { title: 'Submitted', sub: 'Your report was received by LibON.', time: 'Sep 19, 8:10 AM', done: true },
-    { title: 'Received', sub: 'Validated by the Municipal Helpdesk.', time: 'Sep 19, 9:30 AM', done: true },
-    { title: 'Assigned', sub: 'Forwarded for collection.', office: 'General Services Office', time: 'Sep 19, 11:00 AM', done: true },
-    { title: 'Action Taken', sub: 'Collection crew dispatched to the area.', office: 'General Services Office', time: 'Sep 20, 7:20 AM', done: true },
-    { title: 'Resolved', sub: 'Area cleared and collection resumed.', time: 'Sep 20, 10:15 AM', done: true },
-  ],
+const textItems = (value: string) => value.split(/[;\n]/).map(item => item.trim()).filter(Boolean)
+const published = (content: ContentItem[], section: ContentItem['section']) => content.filter(item => item.section === section && item.status === 'Published' && (!item.expiresAt || new Date(item.expiresAt).getTime() >= Date.now()))
+function citizenServices(content: ContentItem[]): Service[] {
+  return published(content, 'Services').map(item => {
+    const base = SERVICES.find(service => service.id === item.id)
+    return { id: item.id, title: item.title, office: item.office, desc: item.body, cat: item.category, icon: base?.icon ?? 'file', online: base?.online, officialLink: item.officialLink?.startsWith('https://') ? item.officialLink : undefined,
+      reqs: textItems(item.requirements).length ? textItems(item.requirements) : base?.reqs ?? [],
+      steps: textItems(item.procedure).length ? textItems(item.procedure) : base?.steps ?? [],
+      hours: item.hours || base?.hours || 'Contact the responsible office', contact: item.contact || base?.contact || 'See Help directory',
+      location: item.location || base?.location || 'Contact the responsible office', processing: item.processing || base?.processing || 'Ask the responsible office' }
+  })
+}
+function citizenUpdates(content: ContentItem[]): Update[] {
+  return published(content, 'Updates').map(item => {
+    const base = UPDATES.find(update => update.id === item.id)
+    const type = item.category === 'Advisory' ? 'Advisories' : item.category === 'Program' ? 'Programs' : item.category === 'Opportunity' ? 'Opportunities' : item.category === 'Event' ? 'Events' : item.category || 'Advisories'
+    return { id: item.id, label: type, type, title: item.title, date: base?.date ?? formatDate(item.publishedAt || item.updatedAt), preview: base?.body === item.body ? base.preview : item.body.slice(0, 110), body: item.body, office: item.office, photo: base?.photo, photoUrl: item.imageUrl?.startsWith('https://') ? item.imageUrl : undefined, photoAlt: base?.photoAlt }
+  })
+}
+function citizenPlaces(content: ContentItem[]): Place[] {
+  return published(content, 'Explore').map(item => {
+    const base = PLACES.find(place => place.id === item.id)
+    return { id: item.id, name: item.title, cat: item.category, brgy: item.location || base?.brgy || 'Libon', icon: base?.icon ?? 'map', photo: base?.photo ?? '1668214748411-d241e83103a1', photoUrl: item.imageUrl?.startsWith('https://') ? item.imageUrl : undefined, alt: base?.alt ?? 'Illustrative local destination image', desc: item.body, hours: item.hours || base?.hours || 'Contact the listing', contact: item.contact || base?.contact || 'See Help directory' }
+  })
+}
+function citizenContacts(content: ContentItem[], category: string): Contact[] {
+  return published(content, 'Help').filter(item => item.category === category).map(item => {
+    const base = [...EMERGENCY, ...OFFICES].find(contact => contact.id === item.id)
+    return { id: item.id, name: item.title, sub: item.body || base?.sub || item.office, icon: base?.icon ?? 'phone', number: item.contact || base?.number || '', hours: item.hours, location: item.location }
+  })
+}
+function citizenReport(ticket: Ticket): Report {
+  const icon = REPORT_CATS.find(category => ticket.category.includes(category.key))?.icon ?? 'flag'
+  const current = STATUSES.indexOf(ticket.status)
+  return { id: ticket.id, category: ticket.category, icon, desc: ticket.message, location: ticket.location, date: formatDate(ticket.submittedAt), status: ticket.status, resolved: ticket.status === 'Resolved',
+    timeline: STATUSES.map((status, index) => {
+      const latest = [...ticket.history].reverse().find(entry => entry.status === status)
+      const reached = index <= current
+      return { title: status, sub: latest?.note ?? (reached ? `${status} by authorized LGU personnel.` : status === 'Resolved' ? 'You’ll be notified when this concern is resolved.' : 'Awaiting the assigned office.'), office: latest && index >= 2 ? ticket.office : undefined,
+        time: latest ? formatDate(latest.at, true) : reached ? formatDate(ticket.updatedAt, true) : 'Pending', done: reached, active: index === current + 1 }
+    }) }
 }
 
 /* ------------------------------------------------------------------ */
@@ -236,6 +271,9 @@ function Chips({ items, value, onChange }: { items: string[]; value: string; onC
 /* HOME                                                                */
 /* ------------------------------------------------------------------ */
 function Home({ nav, reports }: { nav: Nav; reports: Report[] }) {
+  const data = useDemoStore()
+  const updates = citizenUpdates(data.content)
+  const services = citizenServices(data.content)
   const active = reports.find(r => !r.resolved)
   return (
     <div className="scroll no-scrollbar">
@@ -280,9 +318,9 @@ function Home({ nav, reports }: { nav: Nav; reports: Report[] }) {
 
         <SectionHead title="Latest Updates" actionLabel="View all" onAction={() => nav.go('updates')} />
         <div className="update-list">
-          {UPDATES.slice(0, 2).map(u => (
+          {updates.slice(0, 2).map(u => (
             <button key={u.id} className="update-line" onClick={() => nav.go('updateDetail', u.id)}>
-              {u.photo && <Photo src={imgUrl(u.photo, 180, 180)} alt={u.photoAlt || u.title} icon="megaphone" className="update-thumb" />}
+              {(u.photo || u.photoUrl) && <Photo src={u.photoUrl || imgUrl(u.photo!, 180, 180)} alt={u.photoAlt || u.title} icon="megaphone" className="update-thumb" />}
               <div>
                 <span className={`u-eyebrow e-${u.type.toLowerCase()}`}>{u.label.toUpperCase()}</span>
                 <strong>{u.title}</strong>
@@ -295,7 +333,7 @@ function Home({ nav, reports }: { nav: Nav; reports: Report[] }) {
 
         <SectionHead title="Popular Services" actionLabel="See all" onAction={() => nav.go('services')} />
         <div className="service-list">
-          {SERVICES.slice(0, 3).map(s => (
+          {services.slice(0, 3).map(s => (
             <button key={s.id} className="service-row" onClick={() => nav.go('serviceDetail', s.id)}>
               <span className="mini-icon sm"><Icon name={s.icon} size={19} /></span>
               <div><strong>{s.title}</strong><small>{s.office}</small></div>
@@ -336,10 +374,13 @@ function QuickAction({ heroIcon, label, tone, onClick }: { heroIcon: ReactNode; 
 /* NOTIFICATIONS                                                       */
 /* ------------------------------------------------------------------ */
 function Notifications({ nav }: { nav: Nav }) {
+  const data = useDemoStore()
+  const updates = citizenUpdates(data.content)
+  const recentReport = data.tickets.filter(ticket => ticket.citizenVisible).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0]
+  const latestUpdate = updates[0]
   const items = [
-    { icon: 'ticket' as IconName, title: 'Report status updated', body: 'LIB-2026-0132 has been resolved.', time: '2h ago', go: () => nav.go('tracking', 'LIB-2026-0132'), unread: true },
-    { icon: 'megaphone' as IconName, title: 'New municipal advisory', body: 'Heavy rainfall advisory issued for Albay.', time: '5h ago', go: () => nav.go('updateDetail', 'u1'), unread: true },
-    { icon: 'graduation' as IconName, title: 'New opportunity', body: 'Youth scholarship applications are now open.', time: 'Yesterday', go: () => nav.go('updateDetail', 'u3'), unread: false },
+    ...(recentReport ? [{ icon: 'ticket' as IconName, title: 'Report status updated', body: `${recentReport.id}: ${recentReport.status}.`, time: formatDate(recentReport.updatedAt), go: () => nav.go('tracking', recentReport.id), unread: true }] : []),
+    ...(latestUpdate ? [{ icon: 'megaphone' as IconName, title: 'Municipal update', body: latestUpdate.title, time: latestUpdate.date, go: () => nav.go('updateDetail', latestUpdate.id), unread: true }] : []),
   ]
   return (
     <div className="scroll no-scrollbar">
@@ -365,12 +406,15 @@ function Notifications({ nav }: { nav: Nav }) {
 /* GLOBAL SEARCH                                                       */
 /* ------------------------------------------------------------------ */
 function Search({ nav }: { nav: Nav }) {
+  const data = useDemoStore()
+  const services = citizenServices(data.content), updates = citizenUpdates(data.content), places = citizenPlaces(data.content)
+  const emergency = citizenContacts(data.content, 'Emergency Contacts'), offices = citizenContacts(data.content, 'Municipal Offices')
   const [q, setQ] = useState('')
   const ql = q.trim().toLowerCase()
-  const svc = ql ? SERVICES.filter(s => (s.title + s.office + s.cat).toLowerCase().includes(ql)) : []
-  const ups = ql ? UPDATES.filter(u => (u.title + u.type).toLowerCase().includes(ql)) : []
-  const pls = ql ? PLACES.filter(p => (p.name + p.cat + p.brgy).toLowerCase().includes(ql)) : []
-  const cts = ql ? [...EMERGENCY, ...OFFICES].filter(c => (c.name + c.sub).toLowerCase().includes(ql)) : []
+  const svc = ql ? services.filter(s => (s.title + s.office + s.cat).toLowerCase().includes(ql)) : []
+  const ups = ql ? updates.filter(u => (u.title + u.type).toLowerCase().includes(ql)) : []
+  const pls = ql ? places.filter(p => (p.name + p.cat + p.brgy).toLowerCase().includes(ql)) : []
+  const cts = ql ? [...emergency, ...offices].filter(c => (c.name + c.sub).toLowerCase().includes(ql)) : []
   const total = svc.length + ups.length + pls.length + cts.length
   return (
     <div className="scroll no-scrollbar">
@@ -419,10 +463,11 @@ function SearchRow({ icon, title, sub, onClick }: { icon: IconName; title: strin
 /* SERVICES                                                            */
 /* ------------------------------------------------------------------ */
 function Services({ nav }: { nav: Nav }) {
+  const services = citizenServices(useDemoStore().content)
   const [q, setQ] = useState('')
   const [cat, setCat] = useState('All')
   const ql = q.trim().toLowerCase()
-  const list = SERVICES.filter(s => (cat === 'All' || s.cat === cat) && (!ql || (s.title + s.office).toLowerCase().includes(ql)))
+  const list = services.filter(s => (cat === 'All' || s.cat === cat) && (!ql || (s.title + s.office).toLowerCase().includes(ql)))
   return (
     <div className="scroll no-scrollbar">
       <div className="plain-head">
@@ -455,7 +500,8 @@ function Services({ nav }: { nav: Nav }) {
 }
 
 function ServiceDetail({ nav, id }: { nav: Nav; id?: string }) {
-  const s = SERVICES.find(x => x.id === id) ?? SERVICES[0]
+  const services = citizenServices(useDemoStore().content)
+  const s = services.find(x => x.id === id) ?? services[0]
   return (
     <div className="scroll no-scrollbar">
       <TopBar title="Service details" nav={nav} />
@@ -490,7 +536,7 @@ function ServiceDetail({ nav, id }: { nav: Nav; id?: string }) {
           </div>
         </div>
 
-        {s.online && (
+        {s.officialLink && (
           <div className="online-note">
             <Icon name="globe" size={18} />
             <div>
@@ -499,7 +545,7 @@ function ServiceDetail({ nav, id }: { nav: Nav; id?: string }) {
             </div>
           </div>
         )}
-        {s.online && <button className="btn-primary">Continue to Official Online System <Icon name="arrow" size={18} /></button>}
+        {s.officialLink && <a className="btn-primary" href={s.officialLink} target="_blank" rel="noopener noreferrer">Continue to Official Online System <Icon name="arrow" size={18} /></a>}
         <button className="btn-bonly" onClick={() => nav.go('chat')}><Bonly size={26} /> Ask Bonly about this service</button>
         <div className="scroll-pad" />
       </div>
@@ -733,8 +779,27 @@ function Tracking({ nav, id, reports }: { nav: Nav; id?: string; reports: Report
 /* ------------------------------------------------------------------ */
 /* TALK TO LIBON (Bonly chat)                                          */
 /* ------------------------------------------------------------------ */
-type Msg = { from: 'bot' | 'user'; text: string; verified?: boolean; actions?: { label: string; go: () => void }[] }
+type AppointmentDetails = {
+  service: string
+  date: string
+  time: string
+  location: string
+  status: string
+}
+type Msg = {
+  from: 'bot' | 'user'
+  text: string
+  verified?: boolean
+  actions?: { label: string; go: () => void }[]
+  checklist?: string[]
+  appointment?: AppointmentDetails
+}
 function Chat({ nav }: { nav: Nav }) {
+  const content = useDemoStore().content
+  const verifiedDental = published(content, 'Knowledge Base').find(item => item.id === 'k1')
+  const verifiedBusiness = published(content, 'Knowledge Base').find(item => item.id === 'k4')
+  const verifiedEmergency = published(content, 'Help').some(item => item.category === 'Emergency Contacts')
+  const verifiedScholarship = published(content, 'Updates').some(item => item.id === 'u3')
   const greeting: Msg = {
     from: 'bot',
     text: 'Maray na aldaw! I’m Bonly, your Libon AI Agent. Ano ang maitutulong ko?',
@@ -746,20 +811,31 @@ function Chat({ nav }: { nav: Nav }) {
 
   const scrollDown = () => requestAnimationFrame(() => { if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight })
 
+  const isDentalBookingRequest = (text: string) => {
+    const t = text.toLowerCase()
+    return /(book|schedule|appointment|reserve|set up)/.test(t) && /(dental|dentist|clinic|rhu|ngipin)/.test(t)
+  }
+
   const reply = (text: string): Msg => {
     const t = text.toLowerCase()
     if (/(streetlight|sira|ilaw|report|basura|flood|baha|pothole|kalsada)/.test(t))
       return { from: 'bot', text: 'I can help you prepare a report. I’ll guide you through choosing a category, describing the issue, and confirming the location before you submit.', actions: [{ label: 'Start a report', go: () => nav.go('report') }] }
     if (/(dental|extraction|ngipin|rhu|health|clinic|doktor)/.test(t))
-      return { from: 'bot', text: 'Yes — the Rural Health Unit offers free dental consultations and tooth extractions on weekday mornings, 8:00 AM–12:00 NN. Bring any valid ID.', verified: true, actions: [{ label: 'View Health Services', go: () => nav.go('serviceDetail', 'dental') }] }
+      return verifiedDental
+        ? { from: 'bot', text: verifiedDental.body, verified: true, actions: [{ label: 'View Health Services', go: () => nav.go('serviceDetail', 'dental') }] }
+        : { from: 'bot', text: 'I cannot verify the dental guide right now. Please check the service page or contact the Rural Health Unit.', actions: [{ label: 'View Health Services', go: () => nav.go('serviceDetail', 'dental') }] }
     if (/(permit|business|negosyo|license)/.test(t))
-      return { from: 'bot', text: 'For a business permit, you’ll need your DTI/SEC registration, barangay clearance, and proof of address. Processing usually takes 5–7 working days at the BPLO.', verified: true, actions: [{ label: 'Business Permit info', go: () => nav.go('serviceDetail', 'business') }] }
+      return verifiedBusiness
+        ? { from: 'bot', text: verifiedBusiness.body, verified: true, actions: [{ label: 'Business Permit info', go: () => nav.go('serviceDetail', 'business') }] }
+        : { from: 'bot', text: 'I cannot verify the permit guide right now. Please check the service page or contact BPLO.', actions: [{ label: 'Business Permit info', go: () => nav.go('serviceDetail', 'business') }] }
     if (/(emergency|tulong|911|ambulance|fire|police|pulis)/.test(t))
-      return { from: 'bot', text: 'For emergencies, please contact the right office directly. Here are Libon’s verified emergency contacts.', actions: [{ label: 'View emergency contacts', go: () => nav.go('help') }] }
+      return { from: 'bot', text: verifiedEmergency ? 'For emergencies, please contact the right office directly. Here are the published pilot emergency contacts.' : 'I cannot verify the emergency directory right now. In an immediate emergency, use the local emergency number.', actions: [{ label: 'View emergency contacts', go: () => nav.go('help') }] }
     if (/(explore|place|food|kain|tourist|lugar)/.test(t))
       return { from: 'bot', text: 'Libon has plenty to discover — from Lake Danao Viewdeck to local markets and homegrown cafés. Want to browse verified local listings?', actions: [{ label: 'Explore Libon', go: () => nav.go('explore') }] }
     if (/(scholar|aral|educ|opportunit|program)/.test(t))
-      return { from: 'bot', text: 'The municipal scholarship program is currently accepting applications for qualified student residents.', verified: true, actions: [{ label: 'View program', go: () => nav.go('updateDetail', 'u3') }] }
+      return verifiedScholarship
+        ? { from: 'bot', text: 'The published pilot update says scholarship applications are open for qualified student residents.', verified: true, actions: [{ label: 'View program', go: () => nav.go('updateDetail', 'u3') }] }
+        : { from: 'bot', text: 'I cannot verify a current scholarship announcement. Please check the Updates section.', actions: [{ label: 'View updates', go: () => nav.go('updates') }] }
     return { from: 'bot', text: 'I specialize in Libon municipal services, information, local assistance, and reporting. Here are a few things I can help with.', actions: [{ label: 'Find a service', go: () => nav.go('services') }, { label: 'Emergency contacts', go: () => nav.go('help') }] }
   }
 
@@ -769,6 +845,34 @@ function Chat({ nav }: { nav: Nav }) {
     setMsgs(m => [...m, { from: 'user', text: clean }])
     setInput('')
     scrollDown()
+
+    if (isDentalBookingRequest(clean) && verifiedDental && published(content, 'Services').some(item => item.id === 'dental')) {
+      const checks: Msg = {
+        from: 'bot',
+        text: 'I’m checking the dental clinic schedule and preparing a Monday appointment.',
+        checklist: [
+          'Matched Dental Services at the Rural Health Unit',
+          'Checked hours: 8:00 AM–12:00 NN',
+          'Prepared the next available window',
+        ],
+      }
+      const appointment: Msg = {
+        from: 'bot',
+        text: 'I found a Monday morning window. Here are the appointment details:',
+        appointment: {
+          service: 'Dental Services',
+          date: 'Monday, September 28, 2026',
+          time: '9:00 AM–10:00 AM',
+          location: 'Rural Health Unit, Poblacion',
+          status: 'Ready to confirm',
+        },
+        actions: [{ label: 'Review Dental Services', go: () => nav.go('serviceDetail', 'dental') }],
+      }
+      setTimeout(() => { setMsgs(m => [...m, checks]); scrollDown() }, 450)
+      setTimeout(() => { setMsgs(m => [...m, appointment]); scrollDown() }, 1150)
+      return
+    }
+
     setTimeout(() => { setMsgs(m => [...m, reply(clean)]); scrollDown() }, 450)
   }
 
@@ -786,7 +890,7 @@ function Chat({ nav }: { nav: Nav }) {
 
   // Suggestions collapse once the conversation starts.
   const shortSuggestions = ['Find a service', 'Report a concern', 'Emergency contacts']
-  const longSuggestions = ['May dental extraction ba sa RHU?', 'Sira po ang streetlight dito.']
+  const longSuggestions = ['Book a dental appointment on Monday', 'May dental extraction ba sa RHU?', 'Sira po ang streetlight dito.']
 
   return (
     <div className="chat-screen">
@@ -802,12 +906,43 @@ function Chat({ nav }: { nav: Nav }) {
       </header>
 
       <div className="chat-body no-scrollbar" ref={bodyRef}>
-        {msgs.map((m, i) => (
-          <div key={i} className={`bubble-wrap ${m.from}`}>
+        {msgs.map((m, i) => {
+          const showBotAvatar = m.from === 'bot' && msgs[i + 1]?.from !== 'bot'
+          const hasFollowingBot = m.from === 'bot' && msgs[i + 1]?.from === 'bot'
+          return (
+          <div key={i} className={`bubble-wrap ${m.from} ${hasFollowingBot ? 'bot-grouped' : ''}`}>
             <div className="bubble-row">
-              {m.from === 'bot' && <img src="/src/assets/bonly-icon.png" alt="Bonly" className="bot-avatar" />}
+              {m.from === 'bot' && (showBotAvatar
+                ? <img src="/src/assets/bonly-icon.png" alt="Bonly" className="bot-avatar" />
+                : <span className="bot-avatar bot-avatar-spacer" aria-hidden="true" />)}
               <div className={`bubble ${m.from}`}>
                 {m.text}
+                {m.checklist && (
+                  <div className="agent-checklist">
+                    <span className="agent-checklist-label">BONLY CHECKED</span>
+                    {m.checklist.map((step, j) => (
+                      <div className="agent-step" key={j}>
+                        <span><Icon name="check" size={12} /></span>
+                        <p>{step}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {m.appointment && (
+                  <div className="appointment-card">
+                    <div className="appointment-card-head">
+                      <div>
+                        <span className="appointment-label">APPOINTMENT DETAILS</span>
+                        <strong>{m.appointment.service}</strong>
+                      </div>
+                      <span className="appointment-status">{m.appointment.status}</span>
+                    </div>
+                    <div className="appointment-detail"><Icon name="calendar" size={16} /><div><small>Date</small><strong>{m.appointment.date}</strong></div></div>
+                    <div className="appointment-detail"><Icon name="clock" size={16} /><div><small>Time</small><strong>{m.appointment.time}</strong></div></div>
+                    <div className="appointment-detail"><Icon name="pin" size={16} /><div><small>Location</small><strong>{m.appointment.location}</strong></div></div>
+                    <p className="appointment-note">Bring any valid ID. Confirm the slot with the RHU before visiting.</p>
+                  </div>
+                )}
                 {m.verified && <span className="verified-tag"><Icon name="shield" size={12} /> Verified municipal information · Updated Sep 2026</span>}
               </div>
             </div>
@@ -817,7 +952,8 @@ function Chat({ nav }: { nav: Nav }) {
               </div>
             )}
           </div>
-        ))}
+          )
+        })}
         {msgs.length === 1 && (
           <div className="suggest-wrap">
             <p className="suggest-label">SUGGESTED</p>
@@ -852,10 +988,11 @@ function Chat({ nav }: { nav: Nav }) {
 /* EXPLORE                                                             */
 /* ------------------------------------------------------------------ */
 function Explore({ nav }: { nav: Nav }) {
+  const places = citizenPlaces(useDemoStore().content)
   const [q, setQ] = useState('')
   const [cat, setCat] = useState('All')
   const ql = q.trim().toLowerCase()
-  const list = PLACES.filter(p => (cat === 'All' || p.cat === cat) && (!ql || (p.name + p.brgy).toLowerCase().includes(ql)))
+  const list = places.filter(p => (cat === 'All' || p.cat === cat) && (!ql || (p.name + p.brgy).toLowerCase().includes(ql)))
   return (
     <div className="scroll no-scrollbar">
       <div className="plain-head">
@@ -871,7 +1008,7 @@ function Explore({ nav }: { nav: Nav }) {
         {list.length === 0 && <div className="empty-block"><Icon name="map" size={30} /><p>No listings in this category yet.</p></div>}
         {list.map(p => (
           <button key={p.id} className="place-card" onClick={() => nav.go('exploreDetail', p.id)}>
-            <Photo src={imgUrl(p.photo, 220, 220)} alt={p.alt} icon={p.icon} className="place-thumb" />
+            <Photo src={p.photoUrl || imgUrl(p.photo, 220, 220)} alt={p.alt} icon={p.icon} className="place-thumb" />
             <div className="place-text">
               <span className="verified-badge"><Icon name="check" size={12} /> Verified Listing</span>
               <strong>{p.name}</strong>
@@ -886,11 +1023,12 @@ function Explore({ nav }: { nav: Nav }) {
   )
 }
 function ExploreDetail({ nav, id }: { nav: Nav; id?: string }) {
-  const p = PLACES.find(x => x.id === id) ?? PLACES[0]
+  const places = citizenPlaces(useDemoStore().content)
+  const p = places.find(x => x.id === id) ?? places[0]
   return (
     <div className="scroll no-scrollbar">
       <div className="detail-cover">
-        <Photo src={imgUrl(p.photo, 900, 600)} alt={p.alt} icon={p.icon} className="cover-photo" />
+        <Photo src={p.photoUrl || imgUrl(p.photo, 900, 600)} alt={p.alt} icon={p.icon} className="cover-photo" />
         <button className="icon-btn floating" onClick={nav.back} aria-label="Back"><Icon name="back" size={22} /></button>
       </div>
       <div className="pad">
@@ -903,8 +1041,8 @@ function ExploreDetail({ nav, id }: { nav: Nav; id?: string }) {
           <div><Icon name="pin" size={16} /><span>{p.brgy}, Libon, Albay</span></div>
           <div><Icon name="phone" size={16} /><span>{p.contact}</span></div>
         </div>
-        <button className="btn-primary"><Icon name="map" size={18} /> Get directions</button>
-        <button className="btn-outline"><Icon name="info" size={16} /> Report incorrect information</button>
+        <a className="btn-primary" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.brgy}, Libon, Albay`)}`} target="_blank" rel="noopener noreferrer"><Icon name="map" size={18} /> Get directions</a>
+        <button className="btn-outline" onClick={() => nav.go('report')}><Icon name="info" size={16} /> Report incorrect information</button>
         <div className="scroll-pad" />
       </div>
     </div>
@@ -915,8 +1053,9 @@ function ExploreDetail({ nav, id }: { nav: Nav; id?: string }) {
 /* UPDATES                                                             */
 /* ------------------------------------------------------------------ */
 function Updates({ nav, initialFilter }: { nav: Nav; initialFilter?: string }) {
+  const updates = citizenUpdates(useDemoStore().content)
   const [f, setF] = useState(initialFilter || 'All')
-  const list = UPDATES.filter(u => f === 'All' || u.type === f)
+  const list = updates.filter(u => f === 'All' || u.type === f)
   return (
     <div className="scroll no-scrollbar">
       <div className="plain-head">
@@ -928,7 +1067,7 @@ function Updates({ nav, initialFilter }: { nav: Nav; initialFilter?: string }) {
         {list.length === 0 && <div className="empty-block"><Icon name="megaphone" size={30} /><p>No updates in this category.</p></div>}
         {list.map(u => (
           <button key={u.id} className="update-card" onClick={() => nav.go('updateDetail', u.id)}>
-            {u.photo && <Photo src={imgUrl(u.photo, 700, 350)} alt={u.photoAlt || u.title} icon="megaphone" className="update-card-photo" />}
+            {(u.photo || u.photoUrl) && <Photo src={u.photoUrl || imgUrl(u.photo!, 700, 350)} alt={u.photoAlt || u.title} icon="megaphone" className="update-card-photo" />}
             <div className="update-card-content">
               <div className="update-card-top">
                 <span className={`u-tag t-${u.type.toLowerCase()}`}>{u.label}</span>
@@ -946,14 +1085,15 @@ function Updates({ nav, initialFilter }: { nav: Nav; initialFilter?: string }) {
   )
 }
 function UpdateDetail({ nav, id }: { nav: Nav; id?: string }) {
-  const u = UPDATES.find(x => x.id === id) ?? UPDATES[0]
+  const updates = citizenUpdates(useDemoStore().content)
+  const u = updates.find(x => x.id === id) ?? updates[0]
   return (
     <div className="scroll no-scrollbar">
       <TopBar title="Announcement" nav={nav} />
       <div className="pad">
-        {u.photo && (
+        {(u.photo || u.photoUrl) && (
           <div className="update-hero-photo">
-            <Photo src={imgUrl(u.photo, 800, 480)} alt={u.photoAlt || u.title} icon="megaphone" className="update-cover" />
+            <Photo src={u.photoUrl || imgUrl(u.photo!, 800, 480)} alt={u.photoAlt || u.title} icon="megaphone" className="update-cover" />
           </div>
         )}
         <span className={`u-tag t-${u.type.toLowerCase()}`}>{u.label}</span>
@@ -974,6 +1114,10 @@ function UpdateDetail({ nav, id }: { nav: Nav; id?: string }) {
 /* HELP                                                                */
 /* ------------------------------------------------------------------ */
 function Help({ nav, section }: { nav: Nav; section?: string }) {
+  const data = useDemoStore()
+  const emergency = citizenContacts(data.content, 'Emergency Contacts')
+  const offices = citizenContacts(data.content, 'Municipal Offices')
+  const otherGroups = [...new Set(published(data.content, 'Help').map(item => item.category).filter(category => !['Emergency Contacts', 'Municipal Offices'].includes(category)))]
   const isOffices = section === 'offices'
   return (
     <div className="scroll no-scrollbar">
@@ -989,17 +1133,18 @@ function Help({ nav, section }: { nav: Nav; section?: string }) {
               <a className="call-lg" href="tel:911">911</a>
             </div>
             <p className="group-label">EMERGENCY</p>
-            {EMERGENCY.map(c => <ContactRow key={c.id} c={c} emphasis />)}
+            {emergency.map(c => <ContactRow key={c.id} c={c} emphasis />)}
           </>
         )}
         <p className="group-label">{isOffices ? 'MUNICIPAL OFFICES' : 'MUNICIPAL CONTACTS'}</p>
-        {OFFICES.map(c => <ContactRow key={c.id} c={c} nav={nav} />)}
+        {offices.map(c => <ContactRow key={c.id} c={c} nav={nav} />)}
         {isOffices && (
           <>
             <p className="group-label">EMERGENCY CONTACTS</p>
-            {EMERGENCY.map(c => <ContactRow key={c.id} c={c} emphasis nav={nav} />)}
+            {emergency.map(c => <ContactRow key={c.id} c={c} emphasis nav={nav} />)}
           </>
         )}
+        {otherGroups.map(group => <div key={group}><p className="group-label">{group.toUpperCase()}</p>{citizenContacts(data.content, group).map(c => <ContactRow key={c.id} c={c} nav={nav} />)}</div>)}
         <button className="btn-bonly" onClick={() => nav.go('chat')}><Bonly size={26} /> Ask Bonly about an office</button>
         <div className="scroll-pad" />
       </div>
@@ -1013,9 +1158,9 @@ function ContactRow({ c, emphasis, nav }: { c: Contact; emphasis?: boolean; nav?
       <div>
         <strong>{c.name}</strong>
         <small>{c.sub}</small>
-        <span className="contact-meta">Mon–Fri 8:00 AM – 5:00 PM ·<br />Municipal Hall</span>
+        <span className="contact-meta">{c.hours || 'Mon–Fri 8:00 AM – 5:00 PM'} ·<br />{c.location || 'Municipal Hall'}</span>
       </div>
-      <a className="call-btn" href={`tel:${c.number.replace(/[^0-9]/g, '')}`}><Icon name="phone" size={15} /> Call</a>
+      {c.number && <a className="call-btn" href={`tel:${c.number.replace(/[^0-9]/g, '')}`}><Icon name="phone" size={15} /> Call</a>}
     </div>
   )
 }
@@ -1126,10 +1271,10 @@ function StatusBar() {
 /* ------------------------------------------------------------------ */
 /* APP ROOT                                                            */
 /* ------------------------------------------------------------------ */
-export default function App() {
+function CitizenApp({ onAdmin }: { onAdmin: () => void }) {
+  const data = useDemoStore()
   const [stack, setStack] = useState<Route[]>([{ screen: 'home' }])
-  const [reports, setReports] = useState<Report[]>([seedReport])
-  const [ticketSeq, setTicketSeq] = useState(147)
+  const reports = data.tickets.filter(ticket => ticket.citizenVisible).map(citizenReport)
 
   const current = stack[stack.length - 1]
   const nav: Nav = {
@@ -1146,19 +1291,19 @@ export default function App() {
   }
 
   const submitReport = (d: Draft) => {
-    const id = `LIB-2026-0${ticketSeq}`
-    setTicketSeq(n => n + 1)
-    const newReport: Report = {
-      id, category: d.category, icon: d.icon, desc: d.desc, location: d.location, date: 'Sep 25, 2026', status: 'Assigned', resolved: false,
-      timeline: [
-        { title: 'Submitted', sub: 'Your report has been received by LibON.', time: 'Sep 25, 8:42 PM', done: true },
-        { title: 'Received', sub: 'Validated by the Municipal Helpdesk.', time: 'Sep 25, 8:50 PM', done: true },
-        { title: 'Assigned', sub: 'Your concern has been assigned for verification.', office: 'Municipal Infrastructure / Maintenance', time: 'Sep 25, 9:15 PM', done: true, active: false },
-        { title: 'Action Taken', sub: 'The assigned office will update this once work begins.', time: 'Pending', done: false, active: true },
-        { title: 'Resolved', sub: 'You’ll be notified when your concern is resolved.', time: 'Pending', done: false },
-      ],
+    const id = nextTicketId(data.tickets)
+    const now = new Date().toISOString()
+    const rule = data.rules.find(item => item.category === d.category)
+    const barangay = d.location.match(/(?:Brgy\.|Barangay)\s+([^,]+)/i)?.[1] ?? d.location.split(',')[0]
+    const newTicket: Ticket = {
+      id, category: d.category, message: d.desc, issueType: d.category, residentNeed: 'Municipal inspection and response', safetyContext: 'Resident-reported community concern',
+      summary: `${d.category} concern reported at ${d.location}: ${d.desc}`, location: d.location, barangay, coordinates: '13.2991° N, 123.4390° E', accuracy: 'Approx. 35 m (demo)',
+      submittedAt: now, updatedAt: now, status: 'Submitted', office: '', focal: '', suggestedOffice: rule?.office ?? ADMIN_OFFICES[5],
+      history: [{ status: 'Submitted', at: now, actor: 'LibON Citizen', note: 'Your report has been received by LibON for staff review.' }], notes: [],
+      ...(d.photo ? { evidence: { capturedAt: now, label: 'Illustrative resident-captured evidence · demo only' } } : {}),
+      citizenVisible: true, routingAccepted: false, requiredComplete: Boolean(d.desc.trim() && d.location.trim()),
     }
-    setReports(r => [newReport, ...r])
+    updateDemoStore(draft => { draft.tickets.unshift(newTicket); addActivity(draft, 'LibON Citizen', 'Submitted new report', id) })
     setStack(s => [...s, { screen: 'reportSuccess', param: id }])
   }
 
@@ -1188,10 +1333,11 @@ export default function App() {
       default: return <Home nav={nav} reports={reports} />
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stack, reports])
+  }, [stack, data])
 
   return (
     <div className="app-frame">
+      <button className="citizen-admin-switch" onClick={onAdmin} title="Open LGU administration dashboard">Admin dashboard <span>↗</span></button>
       <div className="device-shell">
         <span className="device-button device-action" aria-hidden="true" />
         <span className="device-button device-volume-up" aria-hidden="true" />
@@ -1207,4 +1353,15 @@ export default function App() {
       </div>
     </div>
   )
+}
+
+export default function App() {
+  const [path, setPath] = useState(() => window.location.pathname + window.location.search)
+  useEffect(() => {
+    const onPopState = () => setPath(window.location.pathname + window.location.search)
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
+  const navigate = (next: string) => { window.history.pushState({}, '', next); setPath(next); window.scrollTo(0, 0) }
+  return path.startsWith('/admin') ? <AdminDashboard path={path} navigate={navigate} /> : <CitizenApp onAdmin={() => navigate('/admin')} />
 }
