@@ -1,0 +1,11 @@
+{
+  "title": "LibON App",
+  "description": "Enables Libon residents to access municipal services, report concerns, get official updates, explore local info, and receive AI-assisted civic support easily.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
