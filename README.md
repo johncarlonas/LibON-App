@@ -37,8 +37,8 @@ It explores how a centralized digital experience could help residents discover m
 
 The prototype includes two connected interfaces:
 
-- **Citizen Application** — A mobile-inspired interface for accessing municipal information and submitting concerns.
-- **LGU Administrative Dashboard** — A management interface demonstrating how authorized municipal personnel could organize reports, maintain content, and monitor operations.
+- **Citizen Application** - A mobile-inspired interface for accessing municipal information and submitting concerns.
+- **LGU Administrative Dashboard** - A management interface demonstrating how authorized municipal personnel could organize reports, maintain content, and monitor operations.
 
 Both interfaces share a browser-local data store to demonstrate a connected reporting and administration workflow without requiring a production backend.
 
@@ -125,7 +125,7 @@ The administrative interface can update report information, while the citizen in
 
 All of these operations occur in the demonstration environment.
 
-### Bonly — Municipal Assistant Prototype
+### Bonly - Municipal Assistant Prototype
 
 Bonly represents the proposed conversational municipal assistant.
 
@@ -194,8 +194,8 @@ Make sure the following tools are installed:
 
 - [Git](https://git-scm.com/)
 - [Git LFS](https://git-lfs.com/)
-- [Node.js](https://nodejs.org/) — Version 22
-- [pnpm](https://pnpm.io/) — Version 10.34.3
+- [Node.js](https://nodejs.org/) - Version 22
+- [pnpm](https://pnpm.io/) - Version 10.34.3
 
 The project includes a `.mise.toml` configuration specifying the Node.js and pnpm versions used by the development environment.
 
@@ -406,7 +406,7 @@ The scope of this repository is limited to the interactive prototype used to dem
 
 <div align="center">
 
-**LibON App — Turning Libon digitally ON.**
+**LibON App - Turning Libon digitally ON.**
 
 Developed by [John Carlo E. Nas](https://johncarlonas.me)
 
