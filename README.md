@@ -243,19 +243,8 @@ pnpm install --frozen-lockfile
 
 This installs the dependencies defined in `package.json` using the committed pnpm lockfile.
 
-### 3. Verify Figma Make Configuration
 
-Before starting the application, verify that the following file exists:
-
-```text
-.figma/make/site.json
-```
-
-The current `vite.config.ts` imports this configuration directly.
-
-If the file is missing, obtain it from the original Figma Make project and commit it to the repository. Otherwise, Vite may fail during configuration loading.
-
-### 4. Start the Development Server
+### 3. Start the Development Server
 
 Run:
 
@@ -273,7 +262,7 @@ http://localhost:8443
 
 The application should display the citizen-facing prototype.
 
-### 5. Open the Administrative Dashboard
+### 4. Open the Administrative Dashboard
 
 Navigate to:
 
