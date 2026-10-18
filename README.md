@@ -1,4 +1,3 @@
-
 <div align="center">
 
 <h1>LibON App</h1>
@@ -51,30 +50,30 @@ Both interfaces share a browser-local data store to demonstrate a connected repo
 
 The citizen-facing interface presents municipal services and information through a mobile-inspired web experience.
 
-| Feature | Description |
-|---|---|
-| Municipal Services | Browse service information, requirements, procedures, and responsible offices. |
-| Community Reporting | Submit structured reports containing a category, description, and location. |
-| Report Tracking | View report identifiers, processing stages, and status histories. |
-| Municipal Updates | Browse simulated announcements, advisories, and community programs. |
-| Opportunities | Discover listed scholarships, programs, and other opportunities. |
-| Explore Libon | Browse sample local destinations, businesses, and community listings. |
-| Help & Contacts | Access illustrative emergency contacts and municipal office directories. |
-| Unified Search | Search across available services, contacts, updates, and local listings. |
-| Talk to Bonly | Interact with a simulated municipal assistant for information and guided actions. |
+| Feature             | Description                                                                       |
+| ------------------- | --------------------------------------------------------------------------------- |
+| Municipal Services  | Browse service information, requirements, procedures, and responsible offices.    |
+| Community Reporting | Submit structured reports containing a category, description, and location.       |
+| Report Tracking     | View report identifiers, processing stages, and status histories.                 |
+| Municipal Updates   | Browse simulated announcements, advisories, and community programs.               |
+| Opportunities       | Discover listed scholarships, programs, and other opportunities.                  |
+| Explore Libon       | Browse sample local destinations, businesses, and community listings.             |
+| Help & Contacts     | Access illustrative emergency contacts and municipal office directories.          |
+| Unified Search      | Search across available services, contacts, updates, and local listings.          |
+| Talk to Bonly       | Interact with a simulated municipal assistant for information and guided actions. |
 
 ### LGU Administrative Dashboard
 
 The administrative interface demonstrates workflows for receiving, managing, and monitoring municipal concerns and information.
 
-| Module | Description |
-|---|---|
-| Overview | Displays summary statistics, recent activities, and report information. |
-| Ticket Management | Review, filter, assign, update, and resolve citizen reports. |
+| Module                 | Description                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------- |
+| Overview               | Displays summary statistics, recent activities, and report information.             |
+| Ticket Management      | Review, filter, assign, update, and resolve citizen reports.                        |
 | Content Administration | Create and maintain municipal services, updates, contacts, and related information. |
-| Knowledge & Routing | Manage demonstration knowledge-base entries and office-routing rules. |
-| Analytics | Explore report distributions, operational summaries, and workload information. |
-| Users & Activity | Demonstrate administrative roles, user management, and activity records. |
+| Knowledge & Routing    | Manage demonstration knowledge-base entries and office-routing rules.               |
+| Analytics              | Explore report distributions, operational summaries, and workload information.      |
+| Users & Activity       | Demonstrate administrative roles, user management, and activity records.            |
 
 Administrative actions operate on local demonstration data. Role-based interface behavior is simulated and does not provide production authentication or authorization.
 
@@ -84,20 +83,9 @@ LibON uses a client-side architecture built with React and TypeScript.
 
 The citizen application and administrative dashboard are rendered within the same web application and access a shared demonstration store.
 
-```mermaid
-flowchart TD
-    A["React Application"]
-    B["Citizen Interface"]
-    C["LGU Admin Dashboard"]
-    D["Shared Demo Store"]
-    E["Browser Local Storage"]
-
-    A --> B
-    A --> C
-    B --> D
-    C --> D
-    D <--> E
-```
+<div align="center">
+  <img src="src/assets/system-archi.png" alt="LibON System Architecture" width="550" />
+</div>
 
 ### Data Management
 
@@ -119,13 +107,9 @@ Data is stored locally in the browser. It is not synchronized between devices, a
 
 The reporting module models the following process:
 
-```mermaid
-flowchart LR
-    A[Submit Report] --> B[LGU Review]
-    B --> C[Assign Office]
-    C --> D[Action Taken]
-    D --> E[Resolved]
-```
+<div align="center">
+  <img src="src/assets/report-workflow.png" alt="LibON Report Workflow" width="900" />
+</div>
 
 The implemented demonstration uses these report statuses:
 
@@ -161,17 +145,17 @@ Its current implementation is intended to illustrate the proposed user experienc
 
 ## Tech Stack
 
-| Technology | Purpose |
-|---|---|
-| React 19 | Component-based user interface development. |
-| TypeScript | Typed application logic and data structures. |
-| Vite 8 | Development server and production build tooling. |
-| Tailwind CSS 4 | Utility-first styling support. |
-| CSS | Custom styling for the citizen and administrative interfaces. |
-| Heroicons | Interface icon library. |
-| Figma | Design and interactive prototyping workflow. |
-| Browser localStorage | Local persistence of demonstration data. |
-| pnpm | Dependency and package management. |
+| Technology           | Purpose                                                       |
+| -------------------- | ------------------------------------------------------------- |
+| React 19             | Component-based user interface development.                   |
+| TypeScript           | Typed application logic and data structures.                  |
+| Vite 8               | Development server and production build tooling.              |
+| Tailwind CSS 4       | Utility-first styling support.                                |
+| CSS                  | Custom styling for the citizen and administrative interfaces. |
+| Heroicons            | Interface icon library.                                       |
+| Figma                | Design and interactive prototyping workflow.                  |
+| Browser localStorage | Local persistence of demonstration data.                      |
+| pnpm                 | Dependency and package management.                            |
 
 ## Project Structure
 
@@ -305,12 +289,12 @@ Because both interfaces operate on the same local demonstration store, report an
 
 The following commands are defined in `package.json`.
 
-| Command | Description |
-|---|---|
-| `pnpm dev` | Starts the Vite development server. |
-| `pnpm build` | Generates the production build. |
+| Command        | Description                                    |
+| -------------- | ---------------------------------------------- |
+| `pnpm dev`     | Starts the Vite development server.            |
+| `pnpm build`   | Generates the production build.                |
 | `pnpm preview` | Serves the production build for local preview. |
-| `pnpm format` | Invokes the configured oxfmt formatter. |
+| `pnpm format`  | Invokes the configured oxfmt formatter.        |
 
 ### Production Build
 
@@ -371,7 +355,7 @@ libon-pilot-demo-v3
 To manually reset the local data to the original seeded state, open the browser's developer console and run:
 
 ```javascript
-localStorage.removeItem('libon-pilot-demo-v3');
+localStorage.removeItem("libon-pilot-demo-v3");
 window.location.reload();
 ```
 
