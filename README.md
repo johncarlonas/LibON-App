@@ -31,7 +31,7 @@
 
 ## Overview
 
-**LibON App** is an interactive web-based prototype of a proposed digital municipal platform for Libon, Albay, Philippines.
+**LibON App** is an interactive web-based prototype of a proposed digital municipal platform for Libon, Albay.
 
 It explores how a centralized digital experience could help residents discover municipal services, access public information, submit community concerns, and track the progress of their reports.
 
